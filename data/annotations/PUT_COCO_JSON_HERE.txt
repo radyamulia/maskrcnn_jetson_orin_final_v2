@@ -1,0 +1,4 @@
+Put COCO instance segmentation annotations here:
+- train.json
+- val.json
+- test.json

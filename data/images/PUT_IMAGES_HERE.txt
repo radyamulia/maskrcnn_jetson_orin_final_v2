@@ -1,0 +1,4 @@
+Put image files into:
+- data/images/train/
+- data/images/val/
+- data/images/test/

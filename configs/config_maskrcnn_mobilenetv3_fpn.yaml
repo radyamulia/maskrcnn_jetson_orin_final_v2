@@ -1,0 +1,145 @@
+# ============================================================
+# config_maskrcnn_mobilenetv3_fpn.yaml
+# Mask R-CNN + MobileNetV3-FPN configuration
+# Target deployment: Jetson Orin Nano
+# ============================================================
+
+project:
+  name: "pothole_maskrcnn_mobilenetv3_fpn_jetson_orin"
+  seed: 42
+  device: "auto"        # auto, cuda, cpu
+
+paths:
+  project_dir: "."
+  data_dir: "data"
+  image_dir: "data/images"
+  annotation_dir: "data/annotations"
+  video_dir: "data/videos"
+
+  train_img_dir: "data/images/train"
+  val_img_dir: "data/images/val"
+  test_img_dir: "data/images/test"
+
+  train_json: "data/annotations/train.json"
+  val_json: "data/annotations/val.json"
+  test_json: "data/annotations/test.json"
+
+  checkpoint_dir: "checkpoints"
+  output_dir: "outputs"
+  log_dir: "outputs/logs"
+  prediction_dir: "outputs/predictions"
+  metric_dir: "outputs/metrics"
+
+dataset:
+  format: "coco_instance_segmentation"
+  class_names:
+    - "background"
+    - "pothole"
+  num_classes: 2
+  background_label: 0
+  object_label: 1
+  map_all_categories_to_single_class: true
+  input_size: 416
+  alternative_input_size_for_edge: 320
+
+augmentation:
+  train:
+    random_horizontal_flip:
+      enabled: true
+      probability: 0.5
+    color_jitter:
+      enabled: false
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.1
+      hue: 0.05
+    random_blur:
+      enabled: false
+      probability: 0.1
+      kernel_size: 3
+    random_noise:
+      enabled: false
+      probability: 0.1
+      std: 0.02
+  validation:
+    enabled: false
+
+model:
+  architecture: "maskrcnn"
+  backbone: "mobilenetv3_large_fpn"
+  pretrained_backbone: true
+  trainable_backbone_layers: 6
+  rpn_pre_nms_top_n_train: 1000
+  rpn_post_nms_top_n_train: 500
+  rpn_pre_nms_top_n_test: 500
+  rpn_post_nms_top_n_test: 200
+  box_detections_per_img: 50
+  box_score_thresh: 0.5
+
+training:
+  epochs: 50
+  batch_size: 2
+  val_batch_size: 1
+  num_workers: 0
+  pin_memory: true
+
+  optimizer:
+    name: "adamw"
+    learning_rate: 0.0001
+    weight_decay: 0.0001
+
+  scheduler:
+    name: "reduce_lr_on_plateau"
+    mode: "min"
+    factor: 0.5
+    patience: 3
+
+  mixed_precision:
+    enabled: true
+
+  gradient_clipping:
+    enabled: true
+    max_norm: 5.0
+
+  checkpoint:
+    save_best: true
+    save_last: true
+    best_model_name: "best_model.pth"
+    last_model_name: "last_model.pth"
+    monitor: "val_loss"
+    mode: "min"
+
+  logging:
+    csv_name: "training_log.csv"
+    loss_plot_name: "training_validation_loss.png"
+
+inference:
+  score_threshold: 0.5
+  mask_threshold: 0.5
+  max_test_images: 10
+  save_predictions: true
+  prediction_image_suffix: "_prediction.jpg"
+
+video_inference:
+  input_video_name: "pothole_test.mp4"
+  output_video_name: "pothole_test_prediction.mp4"
+  process_every_n_frames: 1
+  max_frames: 100       # use null to process full video
+  codec: "mp4v"
+  mask_alpha: 0.35
+
+edge_deployment:
+  target_device: "Jetson Orin Nano"
+  recommended_input_size: 416
+  recommended_batch_size: 1
+  recommended_process_every_n_frames: 1
+  precision:
+    pytorch_fp32: true
+    fp16_if_available: true
+    onnx_export: true
+    tensorrt_export: true
+  notes:
+    - "Training is performed on laptop or PC."
+    - "Jetson Orin Nano is used for ONNX Runtime and TensorRT inference."
+    - "If FPS is low, export a second ONNX model with input_size 320."
+    - "TensorRT engine should be built directly on Jetson Orin Nano."

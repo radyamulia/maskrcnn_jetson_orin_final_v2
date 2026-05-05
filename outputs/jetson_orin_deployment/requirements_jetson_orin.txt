@@ -1,0 +1,10 @@
+numpy
+opencv-python
+Pillow
+PyYAML
+tqdm
+onnx
+onnxruntime
+pandas
+cuda-python
+pycuda

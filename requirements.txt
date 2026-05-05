@@ -1,0 +1,15 @@
+torch
+torchvision
+torchaudio
+opencv-python
+numpy
+pandas
+matplotlib
+pillow
+pycocotools
+tqdm
+pyyaml
+onnx
+onnxruntime
+jupyter
+ipykernel
